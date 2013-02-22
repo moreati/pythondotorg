@@ -5,6 +5,10 @@ docutils==0.10
 Markdown==2.2.1
 psycopg2==2.4.5
 
+pytz
+freezegun
+hg+ssh://hg@bitbucket.org/fcurella/django-timedelta-field
+
 # Django 1.5c2. Replace with Django==1.5 when 1.5 lands on pypi.
 https://www.djangoproject.com/download/1.5c2/tarball/
 
