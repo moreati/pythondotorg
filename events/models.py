@@ -71,7 +71,7 @@ class Event(ContentManageable):
             if occurring_rule.dt_start > now:
                 occurring_start = (occurring_rule.dt_start, occurring_rule)
 
-        rrules = self.recurring_rules.filter(Q(finish__gt=now) | Q(finish__isnull=True))
+        rrules = self.recurring_rules.filter(finish__gt=now)
         recurring_starts = [(rrule.dt_start, rrule) for rrule in rrules]
         recurring_starts.sort(key=itemgetter(0))
 
