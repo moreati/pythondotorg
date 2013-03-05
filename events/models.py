@@ -60,6 +60,9 @@ class Event(ContentManageable):
 
     @cached_property
     def next_time(self):
+        """
+        Return the OccurringRule or RecurringRule with the closest `dt_start` from now.
+        """
         now = timezone.now()
         recurring_start = occurring_start = None
 
@@ -89,6 +92,11 @@ class Event(ContentManageable):
 
 
 class OccurringRule(models.Model):
+    """
+    A single occurrence of an Event.
+
+    Shares the same API of `RecurringRule`.
+    """
     event = models.OneToOneField(Event, related_name='occurring_rule')
     dt_start = models.DateTimeField(default=timezone.now)
     dt_end = models.DateTimeField(default=timezone.now)
@@ -111,6 +119,11 @@ class OccurringRule(models.Model):
 
 
 class RecurringRule(models.Model):
+    """
+    A repeating occurrence of an Event.
+
+    Shares the same API of `OccurringRule`.
+    """
     event = models.ForeignKey(Event, related_name='recurring_rules')
     begin = models.DateTimeField(default=timezone.now)
     finish = models.DateTimeField(default=timezone.now)
