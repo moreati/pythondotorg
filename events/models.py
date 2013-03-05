@@ -1,9 +1,13 @@
+from operator import itemgetter
+
+from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
+from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 
-from cms.models import ContentManageable
+from cms.models import ContentManageable, NameSlugModel
 from timedelta.fields import TimedeltaField
 
 
@@ -12,66 +16,124 @@ class Calendar(ContentManageable):
     name = models.CharField(max_length=100)
 
 
-class EventCategory(ContentManageable):
-    name = models.CharField(max_length=100)
-    slug = models.SlugField()
+class EventCategory(NameSlugModel):
+    class Meta:
+        ordering = ('name',)
+
+    def get_absolute_url(self):
+        return reverse('events:eventlist_category', kwargs={'slug': self.slug})
+
+
+class EventLocation(models.Model):
+    name = models.CharField(max_length=255)
+    address = models.CharField(blank=True, null=True, max_length=255)
+    url = models.URLField(blank=True, null=True)
+
+    class Meta:
+        ordering = ('name',)
+
+    def get_absolute_url(self):
+        return reverse('events:eventlist_location', kwargs={'pk': self.pk})
+
+
+class EventManager(models.Manager):
+    def for_datetime(self, dt=None):
+        if dt is None:
+            dt = timezone.now()
+        return self.filter(Q(occurring_rule__dt_start__gt=dt) | Q(recurring_rules__finish__gt=dt))
 
 
 class Event(ContentManageable):
+    title = models.CharField(max_length=200)
     calendar = models.ForeignKey(Calendar, related_name='events')
 
     description = models.TextField()
-    location = models.CharField(blank=True, null=True, max_length=255)
-    url = models.URLField(blank=True, null=True)
+    venue = models.ForeignKey(EventLocation, null=True, blank=True, related_name='events')
 
     categories = models.ManyToManyField(EventCategory, related_name='events', blank=True, null=True)
+    featured = models.BooleanField(default=False, db_index=True)
 
-    def get_next_datetime(self):
+    objects = EventManager()
+
+    def get_absolute_url(self):
+        reverse('events:event_detail', kwargs={'pk': self.pk})
+
+    @cached_property
+    def next_time(self):
         now = timezone.now()
+        recurring_start = occurring_start = None
+
         try:
-            occurring_time = self.occurring_time
-        except OccurringTime.DoesNotExist:
+            occurring_rule = self.occurring_rule
+        except OccurringRule.DoesNotExist:
             pass
         else:
-            if occurring_time.dt_start > now:
-                return occurring_time.dt_start
+            if occurring_rule.dt_start > now:
+                occurring_start = (occurring_rule.dt_start, occurring_rule)
+
+        rrules = self.recurring_rules.filter(Q(finish__gt=now) | Q(finish__isnull=True))
+        recurring_starts = [(rrule.dt_start, rrule) for rrule in rrules]
+        recurring_starts.sort(key=itemgetter(0))
 
         try:
-            times = self.recurring_times.filter(Q(dt_end__gt=now) | Q(dt_end__isnull=True))
-            starts = [time.next_dt_start(now) for time in times]
-            return min(starts)
+            recurring_start = recurring_starts[0]
+        except IndexError:
+            pass
 
+        starts = [i for i in (recurring_start, occurring_start) if i is not None]
+        starts.sort(key=itemgetter(0))
+        try:
+            return starts[0][1]
         except IndexError:
             return None
 
 
-class EventTime(models.Model):
+class OccurringRule(models.Model):
+    event = models.OneToOneField(Event, related_name='occurring_rule')
     dt_start = models.DateTimeField(default=timezone.now)
     dt_end = models.DateTimeField(default=timezone.now)
 
-    class Meta:
-        abstract = True
+    @property
+    def begin(self):
+        return self.dt_start
 
-
-class OccurringTime(EventTime):
-    event = models.OneToOneField(Event, related_name='occurring_time')
+    @property
+    def finish(self):
+        return self.dt_end
 
     @property
     def duration(self):
         return self.dt_end - self.dt_start
 
+    @property
+    def single_day(self):
+        return self.dt_start.date() == self.dt_end.date()
 
-class RecurringTime(EventTime):
-    event = models.ForeignKey(Event, related_name='recurring_times')
+
+class RecurringRule(models.Model):
+    event = models.ForeignKey(Event, related_name='recurring_rules')
+    begin = models.DateTimeField(default=timezone.now)
+    finish = models.DateTimeField(default=timezone.now)
     duration = TimedeltaField(default='15 mins')
     interval = TimedeltaField(_("Repeat every"), default="1w")
 
-    def next_dt_start(self, since):
-        occurrence = self.dt_start
+    @property
+    def dt_start(self):
+        since = timezone.now()
+
+        occurrence = self.begin
         while occurrence < since:
             occurrence += self.interval
 
         return occurrence
+
+    @property
+    def dt_end(self):
+        return self.dt_start + self.duration
+
+    @property
+    def single_day(self):
+        return self.dt_start.date() == self.dt_end.date()
 
 
 class Alarm(ContentManageable):
