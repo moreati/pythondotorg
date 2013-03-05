@@ -3,7 +3,7 @@ import dj_database_url
 
 ### Basic config
 
-BASE = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+BASE = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 DEBUG = TEMPLATE_DEBUG = True
 SITE_ID = 1
 SECRET_KEY = 'hu9h&&%j*tcj2o9!k2w%ao=fcw&$0z$)la$&8vl+s$4y%r946h'
@@ -129,5 +129,6 @@ from .pipeline import (
     PIPELINE_CSS, PIPELINE_JS,
     PIPELINE_COMPILERS,
     PIPELINE_SASS_BINARY, PIPELINE_SASS_ARGUMENTS,
-    PIPELINE_CSS_COMPRESSOR, PIPELINE_JS_COMPRESSOR
+    PIPELINE_CSS_COMPRESSOR, PIPELINE_JS_COMPRESSOR,
+    PIPELINE_YUI_BINARY,
 )
