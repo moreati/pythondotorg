@@ -5,14 +5,15 @@ Django==1.5
 docutils==0.10
 Markdown==2.2.1
 psycopg2==2.4.5
+pytz==2012j
 
-pytz
+# Flavio's fork of django-timedelta-field, can be removed when his PRs are merged.
 hg+ssh://hg@bitbucket.org/fcurella/django-timedelta-field
 
 # django-markupfield with Py3 support. Can be removed when 1.1 is released.
 git+git://github.com/jamesturk/django-markupfield.git@70dc74
 
-# My fork of django-sitetree, adding Py3 support. Can be removed when
+# Jeff's fork of django-sitetree, adding Py3 support. Can be removed when
 # https://github.com/idlesign/django-sitetree/pull/93
 git+git://github.com/jefftriplett/django-sitetree.git
 
