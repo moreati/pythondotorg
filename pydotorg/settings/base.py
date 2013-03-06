@@ -8,6 +8,11 @@ DEBUG = TEMPLATE_DEBUG = True
 SITE_ID = 1
 SECRET_KEY = 'hu9h&&%j*tcj2o9!k2w%ao=fcw&$0z$)la$&8vl+s$4y%r946h'
 
+# Until Sentry works on Py3, do errors the old-fashioned way.
+ADMINS = [
+    ("JKM", "jacob@jacobian.org"),
+]
+
 ### Databases
 
 DATABASES = {
@@ -130,5 +135,4 @@ from .pipeline import (
     PIPELINE_COMPILERS,
     PIPELINE_SASS_BINARY, PIPELINE_SASS_ARGUMENTS,
     PIPELINE_CSS_COMPRESSOR, PIPELINE_JS_COMPRESSOR,
-    PIPELINE_YUI_BINARY,
 )
