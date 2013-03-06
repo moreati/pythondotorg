@@ -8,7 +8,7 @@ psycopg2==2.4.5
 pytz==2012j
 
 # Flavio's fork of django-timedelta-field, can be removed when his PRs are merged.
-https://bitbucket.org/fcurella/django-timedelta-field/get/62cd1c089cf2.zip
+https://bitbucket.org/fcurella/django-timedelta-field/get/py3k.zip
 
 # django-markupfield with Py3 support. Can be removed when 1.1 is released.
 git+git://github.com/jamesturk/django-markupfield.git@70dc74
